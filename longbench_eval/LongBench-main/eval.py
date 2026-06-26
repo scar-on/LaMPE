@@ -2,6 +2,7 @@ import os
 import json
 import argparse
 import numpy as np
+from pathlib import Path
 
 from metrics import (
     qa_f1_score,
@@ -14,6 +15,8 @@ from metrics import (
     count_score,
     code_sim_score,
 )
+
+BASE_DIR = Path(__file__).resolve().parent
 
 dataset2metric = {
     "narrativeqa": qa_f1_score,
@@ -80,11 +83,11 @@ if __name__ == '__main__':
     scores = dict()
     
     if args.e:
-        path = f"pred_e/{args.model}/"
-        csv_path = "pred_e/evaluation_results.csv"
+        path = BASE_DIR / "pred_e" / args.model
+        csv_path = BASE_DIR / "pred_e" / "evaluation_results.csv"
     else:
-        path = f"pred/{args.model}/"
-        csv_path = "pred/evaluation_results.csv"
+        path = BASE_DIR / "pred" / args.model
+        csv_path = BASE_DIR / "pred" / "evaluation_results.csv"
     
     all_files = os.listdir(path)
     print("正在评估:", all_files)
@@ -96,7 +99,7 @@ if __name__ == '__main__':
         predictions, answers, lengths = [], [], []
         dataset = filename.split('.')[0]
         
-        with open(f"{path}{filename}", "r", encoding="utf-8") as f:
+        with open(path / filename, "r", encoding="utf-8") as f:
             for line in f:
                 data = json.loads(line)
                 predictions.append(data["pred"])
@@ -114,9 +117,9 @@ if __name__ == '__main__':
     
     # 保存原始JSON格式
     if args.e:
-        out_path = f"pred_e/{args.model}/result.json"
+        out_path = BASE_DIR / "pred_e" / args.model / "result.json"
     else:
-        out_path = f"pred/{args.model}/result.json"
+        out_path = BASE_DIR / "pred" / args.model / "result.json"
     
     with open(out_path, "w") as f:
         json.dump(scores, f, ensure_ascii=False, indent=4)

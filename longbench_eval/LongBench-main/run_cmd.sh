@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "${SCRIPT_DIR}"
+
 # LongBench prediction entry. Keep this script on the llama_cache1-based
 # implementation in pred.py.
 CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-0}" python pred.py \

@@ -119,7 +119,7 @@ if __name__ == "__main__":
     model_path = os.environ.get("LLAMA_MODEL_PATH", "meta-llama/Meta-Llama-3-8B-Instruct")
     max_length = k_to_number(args.max_length) #- max_new_tokens
     open_source_model = args.exp_name
-    data_save_path = f"Predictions/{args.metric}/{open_source_model}"
+    data_save_path = os.path.join(LEVAL_DIR, "Predictions", args.metric, open_source_model)
     print(f"Your prediction file will be saved to: {data_save_path}  , press enter to confirm...")
 
     device = torch.device(f'cuda:{args.gpu}' if torch.cuda.is_available() else 'cpu')

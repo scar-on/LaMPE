@@ -146,7 +146,7 @@ def load_model(
     tok = AutoTokenizer.from_pretrained(args.model_path)
     tok.pad_token = tok.eos_token
     max_len = int(args.max_len/1024)
-    result_dir = Path(__file__).resolve().parents[1] / "results" / data_name
+    result_dir = Path(args.output_dir) / data_name
     result_dir.mkdir(exist_ok=True, parents=True)
     model_name = "llama3"
     if args.method == "longlm":

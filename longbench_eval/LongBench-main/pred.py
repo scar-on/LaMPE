@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from datasets import load_dataset, load_from_disk
 import torch
 import json
@@ -16,6 +17,8 @@ from functools import partial
 from types import MethodType
 import math
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+
+BASE_DIR = Path(__file__).resolve().parent
 
 
 
@@ -165,8 +168,8 @@ if __name__ == '__main__':
     world_size = 1
     mp.set_start_method('spawn', force=True)
 
-    model2path = json.load(open("config/model2path.json", "r"))
-    model2maxlen = json.load(open("config/model2maxlen.json", "r"))
+    model2path = json.load(open(BASE_DIR / "config" / "model2path.json", "r"))
+    model2maxlen = json.load(open(BASE_DIR / "config" / "model2maxlen.json", "r"))
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model_name = args.model
     exp_name = args.exp_name
@@ -181,31 +184,31 @@ if __name__ == '__main__':
         #              "multi_news", "trec", "triviaqa", 'musique', \
         #             "lcc", "repobench-p","gov_report","samsum", "passage_count","passage_retrieval_en","qmsum","narrativeqa"] #
     if "Llama-3" in model_name:
-        dataset2prompt = json.load(open("config/dataset2prompt_llama3.json", "r"))
+        dataset2prompt = json.load(open(BASE_DIR / "config" / "dataset2prompt_llama3.json", "r"))
         args.model_name = "llama3"
     else:
-        dataset2prompt = json.load(open("config/dataset2prompt.json", "r"))
+        dataset2prompt = json.load(open(BASE_DIR / "config" / "dataset2prompt.json", "r"))
         args.model_name = "llama2"
-    dataset2maxlen = json.load(open("config/dataset2maxlen.json", "r"))
+    dataset2maxlen = json.load(open(BASE_DIR / "config" / "dataset2maxlen.json", "r"))
     # predict on each dataset
-    if not os.path.exists("pred"):
-        os.makedirs("pred")
-    if not os.path.exists("pred_e"):
-        os.makedirs("pred_e")
+    pred_dir = BASE_DIR / "pred"
+    pred_e_dir = BASE_DIR / "pred_e"
+    pred_dir.mkdir(exist_ok=True)
+    pred_e_dir.mkdir(exist_ok=True)
     for dataset in datasets:
         if args.e:
-            longbench_e_dir = os.environ.get("LONGBENCH_E_DATA_DIR", "data/longbench_e")
+            longbench_e_dir = os.environ.get("LONGBENCH_E_DATA_DIR", str(BASE_DIR / "data" / "longbench_e"))
             data = load_dataset('json', data_files=os.path.join(longbench_e_dir, f"{dataset}_e.json"))
             data = data['train']
-            if not os.path.exists(f"pred_e/{model_name}_{exp_name}"):
-                os.makedirs(f"pred_e/{model_name}_{exp_name}")
-            out_path = f"pred_e/{model_name}_{exp_name}/{dataset}.jsonl"
+            out_dir = pred_e_dir / f"{model_name}_{exp_name}"
+            out_dir.mkdir(exist_ok=True)
+            out_path = out_dir / f"{dataset}.jsonl"
         else:
-            longbench_data_dir = os.environ.get("LONGBENCH_DATA_DIR", "data/longbench")
+            longbench_data_dir = os.environ.get("LONGBENCH_DATA_DIR", str(BASE_DIR / "data" / "longbench"))
             data = load_from_disk(os.path.join(longbench_data_dir, dataset), dataset)
-            if not os.path.exists(f"pred/{model_name}_{exp_name}"):
-                os.makedirs(f"pred/{model_name}_{exp_name}")
-            out_path = f"pred/{model_name}_{exp_name}/{dataset}.jsonl"
+            out_dir = pred_dir / f"{model_name}_{exp_name}"
+            out_dir.mkdir(exist_ok=True)
+            out_path = out_dir / f"{dataset}.jsonl"
         prompt_format = dataset2prompt[dataset]
         max_gen = dataset2maxlen[dataset]
         data_all = [data_sample for data_sample in data]

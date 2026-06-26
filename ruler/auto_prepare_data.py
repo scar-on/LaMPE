@@ -1,6 +1,9 @@
 import os
 import argparse
+import shlex
 from concurrent.futures import ProcessPoolExecutor
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 tasks = [
     "niah_single_1", "niah_single_2", "niah_single_3",
@@ -22,12 +25,19 @@ template = {
 }
 
 def execute_command(task):
+    prepare_script = os.environ.get("RULER_PREPARE_SCRIPT", os.path.join(SCRIPT_DIR, "data", "prepare.py"))
+    if not os.path.exists(prepare_script):
+        raise FileNotFoundError(
+            f"RULER data prepare script not found: {prepare_script}. "
+            "Set RULER_PREPARE_SCRIPT to the prepare.py from your local RULER checkout."
+        )
+    save_dir = os.environ.get("RULER_DATA_JSONL_DIR", os.path.join(SCRIPT_DIR, "data-jsonl"))
     cmd = f"""
-    python data/prepare.py \
-    --save_dir ./data-jsonl \
+    python {shlex.quote(prepare_script)} \
+    --save_dir {shlex.quote(save_dir)} \
     --benchmark synthetic \
     --task {task} \
-    --tokenizer_path {args.model_path} \
+    --tokenizer_path {shlex.quote(args.model_path)} \
     --tokenizer_type hf \
     --max_seq_length {args.max_length} \
     --model_template_type {temp} \

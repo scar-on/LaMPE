@@ -7,6 +7,8 @@ from glob import glob
 from datasets import load_dataset
 import re
 
+LEVAL_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+
 
 
 
@@ -32,28 +34,36 @@ def to_filename(data_save_path, task_name):
     return os.path.join(data_save_path, task_name + ".pred.jsonl")
 
 
+def resolve_leval_path(path):
+    if os.path.isabs(path):
+        return path
+    return os.path.join(LEVAL_DIR, path)
+
+
 def build_key_data_pairs(args, key_data_pairs, data_save_path):
-    os.makedirs(f"Predictions/{args.metric}", exist_ok=True)
+    os.makedirs(os.path.join(LEVAL_DIR, "Predictions", args.metric), exist_ok=True)
     if ("llm" not in args.metric) and ("human" not in args.metric):
         os.makedirs(data_save_path, exist_ok=True)
         if args.task_name:
             data = load_dataset('L4NLP/LEval', args.task_name, split='test')
             key_data_pairs[to_filename(data_save_path, args.task_name)] = data
         elif args.mc_tasks:
-            files = [os.path.join("LEval-data/Closed-ended-tasks", f"{task_name}.jsonl") for task_name in with_option_tasks]
+            files = [
+                os.path.join(LEVAL_DIR, "LEval-data", "Closed-ended-tasks", f"{task_name}.jsonl")
+                for task_name in with_option_tasks
+            ]
             for file_path in files:
                 data = read_jsonl(file_path)
-                match = re.search(r'/([^/]*)\.jsonl', file_path)
-                file_name = match.group(1)
+                file_name = os.path.splitext(os.path.basename(file_path))[0]
                 key_data_pairs[to_filename(data_save_path, file_name)] = data
         elif args.task_path:
+            args.task_path = resolve_leval_path(args.task_path)
             if os.path.isdir(args.task_path):
                 args.task_path = os.path.join(args.task_path, "*")
             files = glob(args.task_path)
             for file_path in files:
                 data = read_jsonl(file_path)
-                match = re.search(r'/([^/]*)\.jsonl', file_path)
-                file_name = match.group(1)
+                file_name = os.path.splitext(os.path.basename(file_path))[0]
                 key_data_pairs[to_filename(data_save_path, file_name)] = data
         else:
             if args.metric == "ngram_eval":
@@ -69,7 +79,7 @@ def build_key_data_pairs(args, key_data_pairs, data_save_path):
             try:
                 data = load_dataset('L4NLP/LEval', gen_data, split='test')
             except:
-                data = read_jsonl(f"LEval-data/Open-ended-tasks/{gen_data}.jsonl")
+                data = read_jsonl(os.path.join(LEVAL_DIR, "LEval-data", "Open-ended-tasks", f"{gen_data}.jsonl"))
             if args.metric == "llm_turbo_eval":
                 data = [d for d in data if d["evaluation"] == "human" or d["evaluation"] == "LLM"]
             elif "gpt4" in args.metric:

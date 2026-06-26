@@ -1,6 +1,9 @@
 import os
 from argparse import ArgumentParser, Namespace
+from pathlib import Path
 from eval_utils import DATA_NAME_TO_MAX_NEW_TOKENS
+
+INFINITEBENCH_DIR = Path(__file__).resolve().parents[1]
 
 
 def parse_args() -> Namespace:
@@ -15,10 +18,10 @@ def parse_args() -> Namespace:
     p.add_argument(
         '--data_dir',
         type=str,
-        default=os.environ.get("INFINITEBENCH_DATA_DIR", "data"),
+        default=os.environ.get("INFINITEBENCH_DATA_DIR", str(INFINITEBENCH_DIR / "data")),
         help="The directory of data."
     )
-    p.add_argument("--output_dir", type=str, default=os.environ.get("INFINITEBENCH_OUTPUT_DIR", "results"), help="Where to dump the prediction results.")  # noqa
+    p.add_argument("--output_dir", type=str, default=os.environ.get("INFINITEBENCH_OUTPUT_DIR", str(INFINITEBENCH_DIR / "results")), help="Where to dump the prediction results.")  # noqa
     p.add_argument(
         "--model_path",
         type=str,

@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "${SCRIPT_DIR}"
+
 max_lens=( $((40 * 1024)) $((48 * 1024)) $((56 * 1024)) $((64 * 1024)))
 
 model_path="${LLAMA_MODEL_PATH:-meta-llama/Meta-Llama-3-8B-Instruct}"
